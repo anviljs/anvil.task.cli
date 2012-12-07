@@ -1,0 +1,27 @@
+{
+  "author": "Alex Robson <alex@sharplearningcurve.com> (http://sharplearningcurve.com)",
+  "contributors": [
+    "Doug Neiner (http://code.dougneiner.com)",
+    "Brian Edgerton"
+  ],
+  "name": "anvil.task.cli",
+  "description": "An anvil core extension that exposes tasks to the command line",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/anviljs/anvil.task.cli.git"
+  },
+  "engines": {
+    "node": "~0.8.3"
+  },
+  "main": "./lib/task.js",
+  "dependencies": {
+    "prompt": "~0.2"
+  },
+  "devDependencies": { 
+    "anvil.js": ">=0.9.0",
+    "should": "~1.1"
+  },
+  "optionalDependencies": {},
+  "keywords": [ "anvil", "core", "tasks" ]
+}
