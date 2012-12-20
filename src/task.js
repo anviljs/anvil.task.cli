@@ -1,4 +1,64 @@
 var taskFactory = function( _, anvil ) {
+
+    anvil.plugin( {
+        name: "anvil.build-task-runner",
+        activities: [ "pre-build", "post-build" ],
+        testsPassed: true,
+
+        configure: function( config, command, done ) {
+            var self = this;
+            anvil.on( "tests.failed", function() {
+                self.testsPassed = false;
+            } );
+
+            anvil.on( "tests.passed", function() {
+                self.testsPassed = true;
+            } );
+
+            done();
+        },
+
+        getTask: function( taskName ) {
+            return anvil.extensions.tasks[ taskName ];
+        },
+
+        "post-build": function( done ) {
+            var postBuildTasks = anvil.config.postBuild;
+            if( this.testsPassed && !_.isEmpty( postBuildTasks ) ) {
+                this.runTasks( postBuildTasks, done );
+            } else {
+                done();
+            }
+        },
+
+        "pre-build": function( done ) {
+            var preBuildTasks = anvil.config.preBuild;
+            if( !_.isEmpty( preBuildTasks ) ) {
+                this.runTasks( preBuildTasks, done );
+            } else {
+                done();
+            }
+        },
+
+        run: function( done, activity ) {
+            this[ activity ]( done );
+        },
+
+        runTasks: function( list, done ) {
+            var tasks = _.map( list, function( options, taskName ) {
+                return function( done ) {
+                    var task = anvil.extensions.tasks[ taskName ];
+                    if( task ) {
+                        task.run( options, done );
+                    } else {
+                        done();
+                    }
+                };
+            } );
+            anvil.scheduler.pipeline( undefined, tasks, done );
+        }
+    } );
+
     anvil.command( {
         name: "anvil.task",
         commander: {
@@ -16,40 +76,12 @@ var taskFactory = function( _, anvil ) {
              return anvil.extensions.tasks[ taskName ];
         },
 
-        getList: function( taskName, list, missing ) {
-            var self = this;
-            if( list[ taskName ] ) {
-                return;
-            } else {
-                var task = this.getTask( taskName );
-                if( task ) {
-                    if( task.dependencies.length ) {
-                        _.each( task.dependencies, function( dependency ) {
-                            self.getList( dependency, list, missing );
-                        } );
-                    }
-                    list[ taskName ] = task;
-                } else {
-                    missing.push( taskName );
-                }
-            }
-        },
-
         run: function( taskName, options, done ) {
-            var tasks = {},
-                missing = [];
-            this.getList( taskName, tasks, missing );
-            if( missing.length ) {
-                anvil.log.error( "The following tasks could not be found: " );
-                    _.each( missing, function( dependency ) {
-                        anvil.log.error( "   " + dependency );
-                    } );
+            var task = this.getTask( taskName );
+            if( !task ) {
+                anvil.log.error( "The task '" + taskName + "' could not be found. Please run 'anvil tasks' to see a list of available tasks." );
             } else {
-                var sorted = anvil.utility.dependencySort( tasks, "ascending", function( a, b ) {
-                    return a.name === b.name;
-                } );
-                var calls = _.pluck( tasks, "run" );
-                anvil.scheduler.pipeline( undefined, calls, done );
+                task.run( options, done );
             }
         },
 

@@ -6,7 +6,7 @@
   ],
   "name": "anvil.task.cli",
   "description": "An anvil core extension that exposes tasks to the command line",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "repository": {
     "type": "git",
     "url": "git://github.com/anviljs/anvil.task.cli.git"
